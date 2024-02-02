@@ -65,7 +65,7 @@ function updateTableApi(vToken, color, slots) {
 
     const updateRequestJson = {
         "selection": {
-          "color": "string",
+          "color": color,
           "slots": slots
         }
       }
