@@ -1,21 +1,27 @@
-function visitTable() {
+function onClick() {
  
-    const BASE_API = 'https://meetmatch.us/api/timeTable/'
-    //const vToken = 'vdcf582148cc6424d'
     const vToken = document.getElementById("vTokenText").value
+    const mToken = document.getElementById("mTokenText").value
     const output = document.getElementById("responseText")
 
-    // const req = new Request(BASE_API + vToken)
-    // const response = fetch(req, {mode : "cors"});
+    //const result = visitTableApi(vToken)
 
-    // response.then(res => res.text())
-    //         .then(myjson => output.innerHTML = myjson)
-    //         .catch(err => document.writeln(err))
+    //const result = createTableApi("gggg8", ["2024-02-02T22:32:10.069Z", "2024-02-03T22:32:10.069Z"], 2, 10, 15, "g8@meetmatch.us")
 
-    const result = visitTableApi(vToken)
-    result.then(json => output.innerHTML = json.meetingName)
+    const result = updateTableApi(vToken, "orange", [{ 
+        "startTime": "2024-02-02T22:48:14.780Z",
+        "endTime": "2024-02-02T22:50:14.780Z"
+    },{
+        "startTime": "2024-02-03T21:48:14.780Z",
+        "endTime": "2024-02-03T22:48:14.780Z"
+    }])
+    result.then(json => output.innerHTML = JSON.stringify(json))
+
 
 }
+
+
+
 
 function getApiUrl() {
     return 'https://meetmatch.us/api/timeTable/'
@@ -39,9 +45,12 @@ function createTableApi(meetingName, dateSelection, timeRangeStart = 0, timeRang
 
     const BASE_API = getApiUrl()
     const req = new Request(BASE_API)
+    const head = new Headers()
+    head.append('Content-Type', 'application/json')
     const response = fetch(req, {
         mode : "cors",
         method : "POST",
+        headers : head,
         body : createRequestStr
     });
 
@@ -71,12 +80,14 @@ function updateTableApi(vToken, color, slots) {
       }
     const updateRequestStr = JSON.stringify(updateRequestJson)
 
-
+    const head = new Headers()
+    head.append('Content-Type', 'application/json')
     const BASE_API = getApiUrl()
     const req = new Request(BASE_API + "update/" + vToken)
     const response = fetch(req, {
         mode : "cors",
         method : "POST",
+        headers : head,
         body : updateRequestStr
     });
 
@@ -99,11 +110,14 @@ function manageTableApi(mToken, meetingName, dateSelection, timeRangeStart = 0, 
     }
     const manageRequestStr = JSON.stringify(manageRequestJson)
 
+    const head = new Headers()
+    head.append('Content-Type', 'application/json')
     const BASE_API = getApiUrl()
     const req = new Request(BASE_API + "manage/" + mToken)
     const response = fetch(req, {
         mode : "cors",
         method : "PUT",
+        headers : head,
         body : manageRequestStr
     });
 
