@@ -8,13 +8,19 @@ function onClick() {
 
     //const result = createTableApi("gggg8", ["2024-02-02T22:32:10.069Z", "2024-02-03T22:32:10.069Z"], 2, 10, 15, "g8@meetmatch.us")
 
-    const result = updateTableApi(vToken, "orange", [{ 
-        "startTime": "2024-02-02T22:48:14.780Z",
-        "endTime": "2024-02-02T22:50:14.780Z"
-    },{
-        "startTime": "2024-02-03T21:48:14.780Z",
-        "endTime": "2024-02-03T22:48:14.780Z"
-    }])
+    // const result = updateTableApi(vToken, "orange", [{ 
+    //     "startTime": "2024-02-02T22:48:14.780Z",
+    //     "endTime": "2024-02-02T22:50:14.780Z"
+    // },{
+    //     "startTime": "2024-02-03T21:48:14.780Z",
+    //     "endTime": "2024-02-03T22:48:14.780Z"
+    // }])
+
+    //const result = manageTableApi(mToken, "develop 9g", ["2024-02-02T22:32:10.069Z", "2024-02-03T22:32:10.069Z"], 1, 7, 6, "9g@meetmatch.us")
+
+    //const result = getTableResultApi(vToken)
+
+    //const result = deleteTableApi(mToken)
     result.then(json => output.innerHTML = JSON.stringify(json))
 
 
