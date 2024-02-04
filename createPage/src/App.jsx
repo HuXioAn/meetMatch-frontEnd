@@ -42,6 +42,7 @@ function Home() {
       <ul style={{ listStyleType: 'none', padding: 0 }} >
         <li style={{padding:10, fontSize:20}}>
           <Link to="/MeetingCreate">MeetingCreate</Link>
+          asdfgg
         </li>
       </ul>
     </div>
