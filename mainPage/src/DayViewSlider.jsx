@@ -265,7 +265,7 @@ export class DayViewSlider extends React.Component{
               
             }}>
               <div style={{marginLeft:'10vw'}}>
-                <h4>this.state.meetingNames</h4>
+                <h4>{this.state.meetingNames}</h4>
               </div>
               
             </div>
