@@ -30,7 +30,7 @@ const Info = () => {
 
   return (
     <div className="info-container">
-      <button onClick={() => setGuideVisible(true)} className="guide-button">❗</button>
+      <button onClick={() => setGuideVisible(true)} className="guide-button">!</button>
       {guideVisible && (
         <div className="guide-overlay">
           <div className="guide-content">
