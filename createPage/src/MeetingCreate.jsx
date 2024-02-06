@@ -13,9 +13,11 @@ function MeetingCreate() {
     const handleSubmit = async (event) => {
         event.preventDefault();
         const dateSelection = selectedDates.map(date => date.format('YYYY-MM-DD'));
+        
+        
         api.createTableApi(meetingName, dateSelection, 0, 24, maxCollaborator, email)
             .then(response => {
-                history.push('/info', { meetingInfo: { meetingName, dateSelection, maxCollaborator, email, response } });
+                history.push('/info', { meetingInfo: { meetingName, selectedDates: dateSelection, maxCollaborator, email, response } });
             })
             .catch(error => {
                 console.error('Error creating meeting:', error);

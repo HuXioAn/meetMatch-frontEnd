@@ -1,4 +1,5 @@
-/* Info.css */
+/* Info.css - 完整样式 */
+
 .info-container {
   max-width: 600px;
   margin: 20px auto;
@@ -6,6 +7,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
+  position: relative; /* 为感叹号按钮定位提供参考 */
 }
 
 .info-title {
@@ -18,18 +20,77 @@
   line-height: 1.5;
 }
 
-.go-button {
-  display: block;
-  width: 100%;
-  padding: 10px 20px;
+.go-link {
+  display: inline-block;
   margin-top: 20px;
+  padding: 10px 20px;
   border: none;
   border-radius: 4px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
+  text-decoration: none;
 }
 
-.go-button:hover {
+.go-link:hover {
+  background-color: #0056b3;
+}
+
+/* 感叹号按钮样式 */
+.guide-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  padding: 5px;
+  border: none;
+  border-radius: 50%;
+  background-color: #add8e6; /* 淡蓝色背景 */
+  color: white; /* 白色感叹号 */
+  cursor: pointer;
+  font-size: 24px;
+  text-align: center;
+  line-height: 30px;
+}
+
+/* 导览覆盖层样式 */
+.guide-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+  z-index: 1000; /* 确保在最上层 */
+}
+
+/* 导览内容样式 */
+.guide-content {
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%; /* 根据需要调整宽度 */
+  max-width: 500px; /* 最大宽度限制 */
+  text-align: center;
+}
+
+/* 导览中的“下一步”按钮样式 */
+.guide-next {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.guide-next:hover {
   background-color: #0056b3;
 }
