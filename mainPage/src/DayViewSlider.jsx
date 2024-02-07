@@ -383,12 +383,12 @@ const styles = {
   guideButton: {
     position: 'absolute', // 使用绝对定位
     // top: '20px', // 距离顶部20px
-    left: '5vw', // 距离左侧20px
-    width: '6vw', // 设置按钮宽度
-    height: '6vw', // 设置按钮高度，与宽度相等形成圆形
-    padding: '2vw', // 内边距
-    fontSize: '4vw', // 感叹号的字体大小
-    lineHeight: '2vw', // 用于垂直居中感叹号
+    left: '10%', // 距离左侧20px
+    width: '40px', // 设置按钮宽度
+    height: '40px', // 设置按钮高度，与宽度相等形成圆形
+    padding: '5px', // 内边距
+    fontSize: '24px', // 感叹号的字体大小
+    lineHeight: '30px', // 用于垂直居中感叹号
     textAlign: 'center', // 文本居中对齐
     border: 'none', // 无边框
     borderRadius: '50%', // 边框半径50%形成圆形
