@@ -30,19 +30,41 @@ export class DayViewSlider extends React.Component{
       RevEvents: [],
       meetingNames:'',
       dateSelections:'',
-      isLoading: true
+      isLoading: true,
+      isGuideVisible: false,
+      guideStep: 0,
     };
   }
+
+  setIsGuideVisible = (isGuideVisible) => {
+    this.setState({isGuideVisible});
+  }
+
+  setGuideStep = (guideStep) => {
+    this.setState({guideStep});
+  }
+
+  guideContent = [
+    "Step 1: Please note the light green optional area, these are the optional timeslots for the meeting.",
+    "Step 2: Long press and drag to select time.",
+    "Step 3: Click on the timeslot you have selected if you want to delete your selection.",
+    "Step 4: Click the 'SUBMIT' button on the top right to submit your choice."
+];
+
+  nextGuideStep = () => {
+    if (this.state.guideStep < this.guideContent.length - 1) {
+      this.setGuideStep(this.state.guideStep + 1);
+    } else {
+      this.setIsGuideVisible(false); // 关闭导览
+      this.setGuideStep(0); // 重置导览步骤
+    }
+};
 
   componentDidMount(){
     //  this.TokenFetch();
      this.InitialTimeTableFetch()
      console.log('check rev', this.state.RevEvents)
   }
-
-//   TokenFetch = async () => {
-    
-//   }
 
   InitialTimeTableFetch = async () => {
     // console.log('table fetch');
@@ -255,23 +277,39 @@ export class DayViewSlider extends React.Component{
               flexDirection: 'row',
               height:'10vh'
             }}>
-
             <div style={{
               display:'flex',
-              width:'50vw',
+              width:'15vw',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <button onClick={() => this.setIsGuideVisible(true)} style={styles.guideButton}>!</button>
+              {this.state.isGuideVisible && (
+                    <div style={styles.guideOverlay}>
+                        <div style={styles.guideContent}>
+                            <p>{this.guideContent[this.state.guideStep]}</p>
+                            <button onClick={this.nextGuideStep} style={styles.nextButton}>
+                                {this.state.guideStep < this.guideContent.length - 1 ? "➡️" : "Close"}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div style={{
+              display:'flex',
+              width:'45vw',
               justifyContent: 'flex-start', 
               alignItems: 'center',
               flexDirection: 'row'
-              
             }}>
               <div style={{marginLeft:'10vw'}}>
                 <h4>{this.state.meetingNames}</h4>
               </div>
-              
             </div>
+            
             <div style={{
               display:'flex',
-              width:'50vw',
+              width:'40vw',
               justifyContent: 'center',
               alignItems: 'center'
             }}>
@@ -328,23 +366,6 @@ export const INITIAL_EVENTS = [
   }
 ]
 
-// export class MainCalendar extends React.Component{
-  
-  
-
-//   componentDidMount(){
-//     this.InitialTimeTableFetch();
-//   }
-
-
-//   render(){
-    
-//     return(
-      
-//     )
-//   }
-// }
-
 
 function GenerateRandomColor(){
   if(BGcolorFlag==0){
@@ -358,83 +379,54 @@ function GenerateRandomColor(){
   } 
 }
 
-// function TokenFetch(){
-//   const queryParams = new URLSearchParams(window.location.search);
-//   const id = queryParams.get('id');
-//   const name = queryParams.get('name');
-//   const type = queryParams.get('type');
-//   console.log(id, name, type);
+const styles = {
+  guideButton: {
+    position: 'absolute', // 使用绝对定位
+    // top: '20px', // 距离顶部20px
+    left: '5vw', // 距离左侧20px
+    width: '6vw', // 设置按钮宽度
+    height: '6vw', // 设置按钮高度，与宽度相等形成圆形
+    padding: '2vw', // 内边距
+    fontSize: '4vw', // 感叹号的字体大小
+    lineHeight: '2vw', // 用于垂直居中感叹号
+    textAlign: 'center', // 文本居中对齐
+    border: 'none', // 无边框
+    borderRadius: '50%', // 边框半径50%形成圆形
+    backgroundColor: '#add8e6', // 淡蓝色背景
+    color: 'white', // 白色文本
+    cursor: 'pointer', // 鼠标悬停时显示指针
+    zIndex: 1050, // 确保按钮在其他元素之上
+  },
+  guideOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1040, // 高于页面上大多数元素
+  },
+  guideContent: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '5px',
+    width: '80%', // 导览内容宽度
+    maxWidth: '400px', // 最大宽度限制
+    textAlign: 'left', // 文本对齐方式
+    position: 'relative', // 为导览内容内的按钮定位
+  },
+  nextButton: {
+    display: 'inline-block',
+    marginTop: '20px',
+    padding: '10px 15px',
+    border: 'none',
+    borderRadius: '4px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    cursor: 'pointer',
+  }
   
-// }
-
-
-
-// export class MainPage extends React.Component {
-  
-//   render() {
-//     return (
-//       <FullCalendar
-//         plugins={[ timeGridPlugin, interactionPlugin ]}
-//         initialView="timeGridWeek"
-//         dateClick={this.handleDateClick}
-//         height= '100%'
-//         // headerToolbar={false}
-
-//       />
-//     )
-//   }
-//   handleDateClick = (arg) => { // bind with an arrow function
-//     alert(arg.dateStr)
-//   }
-// }
-// export default MainPage;
-
- 
-// class Calendar<TEvent extends object = Event, TResource extends object = object> 
-//interface CalendarProps<TEvent extends object = Event, TResource extends object = object
-// function DayViewSlider(){
-    
-//     const localizer = dayjsLocalizer(dayjs)
-//     return (
-//     <div>
-//         <Calendar
-//             localizer={localizer}
-//             style={{height: 500,
-//                 width:500,
-//             }}
-//         />
-//     </div>
-//     );
-// }
-
-//   export default DayViewSlider;
-
-// const today = new Date();
-// const daysToAdd = 2;
-// const enddate = new Date(today);
-// enddate.setDate(today.getDate() + daysToAdd);
-
-// export const DayViewSlider = () => (
-// <Calendar 
-//     mode="range" 
-//     range={[today, enddate]} 
-//     height='100%'
-//     width='100%'
-// />
-// );
-
-// export const DayViewPage = () => {
-// return (
-// <div className="DayViewSliderContainer" style={{
-//   display: 'flex',
-//   justifyContent: 'center',
-//   alignItems: 'center',
-//   flexDirection: 'row',
-//   flexWrap: 'wrap',
-//   height: '80vh',
-//   width: '90vw'  
-// }}>
-//   <DayViewSlider today={today} enddate={enddate} />
-// </div>
-// );
-// }
+};

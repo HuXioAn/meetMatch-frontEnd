@@ -4,10 +4,10 @@
     color: white;
     border: none;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 2.5vw;
     cursor: pointer;
-    width: 50%; 
-    height:50%;
+    width: 23vw; 
+    height:9vw;
     justify-content: 'center';
     align-items: 'center';
     text-align: center;
