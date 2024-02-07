@@ -17,7 +17,7 @@ function MeetingCreate() {
         "Step 1: Enter the meeting name in the designated field.",
         "Step 2: Select the dates for your meeting using the calendar.",
         "Step 3: Enter the maximum number of collaborators.",
-        "Step 4: Provide an email for meeting notifications.",
+        "Step 4: Provide an email(Optional) for meeting notifications.",
         "Step 5: Click 'Create Meeting' to finalize the meeting setup."
     ];
 
@@ -68,7 +68,7 @@ function MeetingCreate() {
                 </div>
                 <input type="text" value={meetingName} onChange={e => setMeetingName(e.target.value)} placeholder="Meeting Name" style={styles.input} />
                 <input type="number" value={maxCollaborator} onChange={e => setMaxCollaborator(e.target.value)} placeholder="Max Collaborators" style={styles.input} />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" style={styles.input} />
+                <input type="email (Optional)" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional)" style={styles.input} />
                 <button onClick={handleSubmit} style={styles.button}>Create Meeting</button>
             </div>
         </div>
@@ -221,7 +221,7 @@ const styles = {
       position: 'relative', // 为导览内容内的按钮定位
     },
     nextButton: {
-      display: 'inline-block',
+      display: 'block',
       marginTop: '20px',
       padding: '10px 15px',
       border: 'none',
@@ -229,6 +229,7 @@ const styles = {
       backgroundColor: '#007BFF',
       color: 'white',
       cursor: 'pointer',
+      margin: '20px auto',
     }
   };
   
