@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import './info.css'; // 确保有对应的样式文件
+
 
 const Info = () => {
   const location = useLocation();
