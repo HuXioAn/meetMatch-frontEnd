@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar } from 'react-multi-date-picker';
 import { useHistory } from 'react-router-dom';
 import * as api from './api/callapi';
-import './MeetingCreate.css'; // 确保这个路径与你的CSS文件位置相匹配
+import './MeetingCreate.css'; // 你的CSS文件路径
+import "react-multi-date-picker/styles/layouts/mobile.css"; // 基础样式
+// 根据需要导入日间或夜间模式样式
+import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 
 function MeetingCreate() {
     const history = useHistory();
+    const [isDarkMode, setIsDarkMode] = useState(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    useEffect(() => {
+        const matcher = window.matchMedia('(prefers-color-scheme: dark)');
+        const onChange = ({ matches }) => setIsDarkMode(matches);
+        matcher.addListener(onChange);
+        return () => matcher.removeListener(onChange);
+    }, []);
     const [meetingName, setMeetingName] = useState('');
     const [selectedDates, setSelectedDates] = useState([]);
     const [maxCollaborator, setMaxCollaborator] = useState('');
@@ -47,13 +58,13 @@ function MeetingCreate() {
     return (
       <div className="centeredContainer">
         <div className="formContainer">
-          <button onClick={() => setIsGuideVisible(true)} className="guideButton">!</button>
+          <button onClick={() => setIsGuideVisible(true)} className="guideButton">?</button>
           {isGuideVisible && (
             <div className="guideOverlay">
               <div className="guideContent">
                 <p>{guideContent[guideStep]}</p>
                 <button onClick={nextGuideStep} className="nextButton">
-                  {guideStep < guideContent.length - 1 ? "➡️" : "Close"}
+                  {guideStep < guideContent.length - 1 ? "next" : "Close"}
                 </button>
               </div>
             </div>

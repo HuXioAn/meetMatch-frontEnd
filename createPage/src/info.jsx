@@ -7,35 +7,32 @@ const Info = () => {
   const { meetingInfo } = location.state || {};
   const meetingLink = `https://meetmatch.us/table/?vToken=${meetingInfo?.response.tableVisitToken || ''}`;
 
-  // 导览状态
   const [guideVisible, setGuideVisible] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
 
-  // 导览内容
   const guideSteps = [
     "Welcome to your meeting dashboard. Here you can find all the details about your meeting.",
     "Use the 'Copy Meeting Link' to share your meeting with others.",
     "Click 'Go to Meeting' to start or join your meeting directly."
   ];
 
-  // 显示下一步导览或结束导览
   const nextGuideStep = () => {
     if (guideStep < guideSteps.length - 1) {
       setGuideStep(guideStep + 1);
     } else {
       setGuideVisible(false);
-      setGuideStep(0); // 重置导览步骤
+      setGuideStep(0);
     }
   };
 
   return (
     <div className="info-container">
-      <button onClick={() => setGuideVisible(true)} className="guide-button">!</button>
+      <button onClick={() => setGuideVisible(true)} className="guide-button">?</button>
       {guideVisible && (
         <div className="guide-overlay">
           <div className="guide-content">
             <p>{guideSteps[guideStep]}</p>
-            <button onClick={nextGuideStep} className="guide-next">➡️</button>
+            <button onClick={nextGuideStep} className="guide-next">next</button>
           </div>
         </div>
       )}
