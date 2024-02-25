@@ -6,7 +6,7 @@ import * as api from './callapi.js';
 // import moment from 'moment';
 
 import FullCalendar from '@fullcalendar/react'
-// import dayGridPlugin from '@fullcalendar/daygrid';
+import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 // import momentTimezonePlugin from '@fullcalendar/moment-timezone'
@@ -30,6 +30,8 @@ export class DayViewSlider extends React.Component{
       RevEvents: [],
       meetingNames:'',
       dateSelections:'',
+      DateWithoutTime:'',
+      DateNum:'',
       isLoading: true,
       isGuideVisible: false,
       guideStep: 0,
@@ -110,10 +112,14 @@ export class DayViewSlider extends React.Component{
           backgroundColor: '#67e66763',
           borderColor: '#67e66763'
         }
-        
-      });
 
-      console.log('initialevents:',this.state.RevEvents);
+      });
+      const WithoutTimes = data.dateSelection.map((date) => {
+        return date.replace('T00:00:00', '');
+      });
+      const dateNum = WithoutTimes.length;
+
+      console.log('initialevents:',this.state.RevEvents,'  dateNum:',this.state.DateNum);
 
       var newEvents = [];
       var eventnum = existingSelection.length;
@@ -138,13 +144,17 @@ export class DayViewSlider extends React.Component{
       console.log('newevents', newEvents);
 
       const combinedEvents = backgroundEvents.concat(newEvents);
+      // 只显示对应天数后，没有必要再使用背景色显示，只显示提交的事件
 
       this.setState({ 
-        RevEvents: combinedEvents,
+        RevEvents: newEvents,
         dateSelections: RevdateSelections,
         meetingNames: RevmeetingNames,
+        DateWithoutTime: WithoutTimes,
+        DateNum: dateNum,
         isLoading: false
        });
+
        
     } catch(error) {
       console.error("Error fetching table results:", error);
@@ -181,8 +191,8 @@ export class DayViewSlider extends React.Component{
     }));
 
 
-    console.log('color:',color);
-    console.log('timeslot:',timeslot);
+    // console.log('color:',color);
+    // console.log('timeslot:',timeslot);
     api.updateTableApi(Vtoken,color,timeslot).then(reply => {
       if(reply.state == 0){
         alert("Submit successfully!")
@@ -257,6 +267,41 @@ export class DayViewSlider extends React.Component{
         alert(arg.dateStr)
       }
 
+  dayHeaderChange = (headerInfo) => {
+    const actualDate = headerInfo.date;
+    const dateList = this.state.DateWithoutTime;
+    const dateNum = this.state.DateNum;
+    const index = Math.floor((actualDate - new Date(dateList[0])) / (1000 * 60 * 60 * 24))+1;
+
+    if (index >= 0 && index < dateNum) {
+      const displayDate = dateList[index];
+      if (displayDate) {
+        return `${new Date(displayDate).toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'numeric',
+          day: 'numeric'
+        })}`;
+      }
+    }
+
+    return actualDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'numeric',
+      day: 'numeric'
+    });
+  }
+
+  setVisibleRange = () =>{
+    const startDate = new Date(this.state.DateWithoutTime[0]);
+    const endDate = new Date(startDate); 
+    endDate.setDate(startDate.getDate() + this.state.DateNum); 
+  
+    return {
+      start: startDate.toISOString().split('T')[0],
+      end: endDate.toISOString().split('T')[0],
+    };
+  }
+
   render(){
     const { isLoading } = this.state;
     if (isLoading){
@@ -275,78 +320,116 @@ export class DayViewSlider extends React.Component{
           <div style={{
               display:'flex',
               flexDirection: 'row',
-              height:'10vh'
             }}>
             <div style={{
               display:'flex',
-              width:'15vw',
+              height:'5vh',
+              width:'70vw',
               justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <button onClick={() => this.setIsGuideVisible(true)} style={styles.guideButton}>!</button>
-              {this.state.isGuideVisible && (
-                    <div style={styles.guideOverlay}>
-                        <div style={styles.guideContent}>
-                            <p>{this.guideContent[this.state.guideStep]}</p>
-                            <button onClick={this.nextGuideStep} style={styles.nextButton}>
-                                {this.state.guideStep < this.guideContent.length - 1 ? "➡️" : "Close"}
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div style={{
-              display:'flex',
-              width:'45vw',
-              justifyContent: 'flex-start', 
+              flexDirection: 'row',
               alignItems: 'center',
-              flexDirection: 'row'
+
             }}>
-              <div style={{marginLeft:'10vw'}}>
-                <h4>{this.state.meetingNames}</h4>
+              <div style={{
+                display:'flex',
+                width:'10vw',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: '25px',
+                marginLeft: '10px'
+                }}>
+                <button onClick={() => this.setIsGuideVisible(true)} style={styles.guideButton}>!</button>
+                  {this.state.isGuideVisible && (
+                      <div style={styles.guideOverlay}>
+                          <div style={styles.guideContent}>
+                              <p>{this.guideContent[this.state.guideStep]}</p>
+                              <button onClick={this.nextGuideStep} style={styles.nextButton}>
+                                  {this.state.guideStep < this.guideContent.length - 1 ? "➡️" : "Close"}
+                              </button>
+                          </div>
+                      </div>
+                  )}
               </div>
-            </div>
+              <div style={{
+                display:'flex',
+                width:'60vw',
+                justifyContent: 'flex-start', 
+                alignItems: 'center',
+                flexDirection: 'row',
+                marginTop: '25px'
+                }}>
+                <div style={{marginLeft:'10vw'}}>
+                  <h3>{this.state.meetingNames}</h3>
+                </div>
+              </div>
+            </div> 
             
             <div style={{
               display:'flex',
-              width:'40vw',
+              width:'30vw',
               justifyContent: 'center',
-              alignItems: 'center'
+              flexDirection: 'column',
+              alignItems: 'center',
+              
             }}>
-              <button className="SubmitButton" onClick={this.SubmitTimeTable}>
-                SUBMIT
-              </button>
+              <div style={{
+                padding:10,
+                marginTop: '5px'
+                }}>
+                <button className="SubmitButton" onClick={this.SubmitTimeTable}>
+                  SUBMIT
+                </button>
+              </div>
+
+              {/* <div style={{padding:10}}>
+                <button className="SubmitButton">
+                  SHOW
+                </button>
+              </div> */}
+
             </div>
           </div>
           <div style={{
+            // display:'flex',
             flex:1,
-            height:'90vh'
+            height:'95vh'
           }}>
             <FullCalendar
-              plugins={[ timeGridPlugin, interactionPlugin ]}
-              initialView="timeGridWeek"
-              // dateClick={this.handleDateClick}
-              initialDate={this.state.dateSelections[1]}
-              initialEvents={this.state.RevEvents} 
-              height= '90vh'
+              plugins={[ timeGridPlugin, interactionPlugin, dayGridPlugin ]}
+              initialView="timeGrid"
+              height= '94vh'
               dayMinWidth = '14vw'
               slotDuration={'00:30:00'}
-              longPressDelay={500}
-              // dataSet={{
-              //   startStr:this.state.dateSelections[0],
-              //   endStr:this.state.dateSelections[dateSelections.length-1]
-              // }}
-              nowIndicator={true}
-              headerToolbar={false}
+              headerToolbar={true}
               eventMaxStack={100}
+              dayHeaderFormat={{ weekday: 'short', month: 'numeric', day: 'numeric'}}
+              slotLabelFormat={{hour: '2-digit', minute: '2-digit',hour12: false, meridiem: 'long'}}
+              slotLabelContent={(info) => {
+                return info.text ? info.text.replace(/24:00/g, '00:00') : '';
+              }}
+              dayHeaderContent = {this.dayHeaderChange}
+
+              
+              // dateClick={this.handleDateClick}
+              initialDate = {this.state.DateWithoutTime[0]}
+              visibleRange = {this.setVisibleRange}
+              
+
+              initialEvents={this.state.RevEvents} 
+              
+              longPressDelay={500}
+              nowIndicator={true}
+              
               selectable={true}
               selectMirror={true}
               editable={true}
+
               select={this.SwipeTime}
               eventContent={this.renderEventContent}
               eventClick={this.handleEventClick}
               eventsSet={this.handleEvents}
             />
+
           </div>
       </div>
     );
@@ -381,14 +464,14 @@ function GenerateRandomColor(){
 
 const styles = {
   guideButton: {
-    position: 'absolute', // 使用绝对定位
+    position: 'relative', // 使用绝对定位
     // top: '20px', // 距离顶部20px
     left: '10%', // 距离左侧20px
-    width: '40px', // 设置按钮宽度
-    height: '40px', // 设置按钮高度，与宽度相等形成圆形
+    width: '30px', // 设置按钮宽度
+    height: '30px', // 设置按钮高度，与宽度相等形成圆形
     padding: '5px', // 内边距
-    fontSize: '24px', // 感叹号的字体大小
-    lineHeight: '30px', // 用于垂直居中感叹号
+    fontSize: '18px', // 感叹号的字体大小
+    lineHeight: '18px', // 用于垂直居中感叹号
     textAlign: 'center', // 文本居中对齐
     border: 'none', // 无边框
     borderRadius: '50%', // 边框半径50%形成圆形
