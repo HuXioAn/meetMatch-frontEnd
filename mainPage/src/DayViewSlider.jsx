@@ -9,6 +9,8 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import Switch from "react-switch";
+// import '@fullcalendar/daygrid/main.css'
 // import momentTimezonePlugin from '@fullcalendar/moment-timezone'
 // import { Alert } from 'antd';
 import './DayViewSlider.css'
@@ -26,17 +28,34 @@ export class DayViewSlider extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      currentEvents: [],
-      RevEvents: [],
+      currentEvents: [],      //本地新创建的事件
+      RevEvents: [],          //API收取的事件
+      RealTimeEvents: [],     //时间转换完用于统计结果
       meetingNames:'',
-      dateSelections:'',
+      dateSelections:'',      //API收取的时间选择，可能为不连续，来替代前台header的显示
       DateWithoutTime:'',
       DateNum:'',
       isLoading: true,
       isGuideVisible: false,
       guideStep: 0,
+      displayAsBackground: false,
     };
+    this.handleChange = this.handleChange.bind(this);
   }
+
+  ///////////////////////////////////switch
+
+  handleChange(checked) {
+    const updatedEvents = this.state.RevEvents.map(event => ({
+      ...event,
+      display: checked ? 'background' : 'block'
+    }));
+
+    this.setState({ RevEvents: updatedEvents, displayAsBackground: checked });
+
+  }
+
+  ////////////////////////////////////////////////calendar guide
 
   setIsGuideVisible = (isGuideVisible) => {
     this.setState({isGuideVisible});
@@ -50,8 +69,9 @@ export class DayViewSlider extends React.Component{
     "Step 1: Please note the light green optional area, these are the optional timeslots for the meeting.",
     "Step 2: Long press and drag to select time.",
     "Step 3: Click on the timeslot you have selected if you want to delete your selection.",
-    "Step 4: Click the 'SUBMIT' button on the top right to submit your choice."
-];
+    "Step 4: Click the switch to change the events format. It can be in selection mode or view mode. ",
+    "Step 5: Click the 'SUBMIT' button on the top right to submit your choice."
+  ];
 
   nextGuideStep = () => {
     if (this.state.guideStep < this.guideContent.length - 1) {
@@ -60,7 +80,9 @@ export class DayViewSlider extends React.Component{
       this.setIsGuideVisible(false); // 关闭导览
       this.setGuideStep(0); // 重置导览步骤
     }
-};
+  };
+
+  //////////////////////////////////////////////calendar initial
 
   componentDidMount(){
     //  this.TokenFetch();
@@ -99,24 +121,25 @@ export class DayViewSlider extends React.Component{
       RevmeetingNames.push(data.meetingName);
       Array.prototype.push.apply(RevdateSelections, data.dateSelection);
 
-      const backgroundEvents = RevdateSelections.map((date) => {
-        const dateWithoutTime = date.replace('T00:00:00', '');
-        return{
-          id: this.createEventId(),
-          title: ' ', 
-          editable: 'false',
-          selectable: 'false',
-          start: date,
-          end: dateWithoutTime +'T23:59:59',
-          display: 'background',
-          backgroundColor: '#67e66763',
-          borderColor: '#67e66763'
-        }
+      // const backgroundEvents = RevdateSelections.map((date) => {
+      //   const dateWithoutTime = date.replace('T00:00:00', '');
+      //   return{
+      //     id: this.createEventId(),
+      //     title: ' ', 
+      //     editable: false,
+      //     selectable: false,
+      //     start: date,
+      //     end: dateWithoutTime +'T23:59:59',
+      //     display: 'background',
+      //     backgroundColor: '#67e66763',
+      //     borderColor: '#67e66763'
+      //   }
+      // });
 
-      });
       const WithoutTimes = data.dateSelection.map((date) => {
         return date.replace('T00:00:00', '');
       });
+
       const dateNum = WithoutTimes.length;
 
       console.log('initialevents:',this.state.RevEvents,'  dateNum:',this.state.DateNum);
@@ -129,9 +152,9 @@ export class DayViewSlider extends React.Component{
           newEvents.push({
             id: this.createEventId(),
             title: ' ', 
-            editable: 'false',
-            selectable: 'false',
-            display: 'background',
+            editable: false,
+            selectable: false,
+            display: 'block',
             start: existingSelection[eventnum-1].slots[slotnum-1].startTime,
             end: existingSelection[eventnum-1].slots[slotnum-1].endTime,
             backgroundColor: existingSelection[eventnum-1].color,
@@ -143,7 +166,7 @@ export class DayViewSlider extends React.Component{
       }
       console.log('newevents', newEvents);
 
-      const combinedEvents = backgroundEvents.concat(newEvents);
+      // const combinedEvents = backgroundEvents.concat(newEvents);
       // 只显示对应天数后，没有必要再使用背景色显示，只显示提交的事件
 
       this.setState({ 
@@ -162,6 +185,8 @@ export class DayViewSlider extends React.Component{
     }
   };
 
+  //////////////////////////////////////////////////////////calendar submit
+
   SubmitTimeTable = async (event) => {
 
     event.preventDefault();
@@ -171,13 +196,14 @@ export class DayViewSlider extends React.Component{
     let endtime = [];
     let color = '';
 
-    if(this.state.currentEvents[eventnum-1].display == "background"){
+    if(this.state.currentEvents[eventnum-1].extendedProps.selectable == false){
       alert("[!]Select something!")
       return null;
     }
 
     while (eventnum>0){
-      if("background" !=this.state.currentEvents[eventnum-1].display){
+      console.log('this.state.currentEvents[eventnum-1].extendedProps.selectable:',this.state.currentEvents[eventnum-1].extendedProps.selectable);
+      if(this.state.currentEvents[eventnum-1].extendedProps.selectable == true){
         console.log('events:',eventnum);
         starttime.push(this.state.currentEvents[eventnum-1].startStr);
         endtime.push(this.state.currentEvents[eventnum-1].endStr);
@@ -189,7 +215,6 @@ export class DayViewSlider extends React.Component{
       'startTime': starttime,
       'endTime': endtime[index],
     }));
-
 
     // console.log('color:',color);
     // console.log('timeslot:',timeslot);
@@ -204,10 +229,9 @@ export class DayViewSlider extends React.Component{
     }).catch(err => {
       alert("[!]Error submitting: " + err)
     })
-
-
-
   }
+
+  ////////////////////////////////////////////////////////////calendar operation
 
   SwipeTime = (selectInfo) => {
     let title = ' '
@@ -222,18 +246,16 @@ export class DayViewSlider extends React.Component{
           end: selectInfo.endStr,
           backgroundColor: GenerateRandomColor(), // 假设这是一个返回随机颜色的方法
           borderColor: GenerateRandomColor(),
+          editable: true,
+          selectable: true
         };
-    
     calendarApi.addEvent(newEvent);
-    
     console.log(calendarApi);
-    
   }
 
   handleEvents = (events) => {
     // console.log('Current events:', events);
     this.setState({
-
       currentEvents: events
     })
     console.log(this.state.currentEvents)
@@ -245,9 +267,14 @@ export class DayViewSlider extends React.Component{
   }
 
   handleEventClick = (clickInfo) => {
-    if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
-      clickInfo.event.remove()
+    console.log('clickInfo.event.editable:',clickInfo.event.extendedProps.selectable);
+    // console.log('clickInfo.event:',clickInfo.event);
+    if (clickInfo.event.extendedProps.selectable == true){
+      if (confirm(`Are you sure you want to delete the event?`)) {
+        clickInfo.event.remove()
+      }
     }
+    
   }
 
   renderEventContent(eventInfo) {
@@ -265,7 +292,7 @@ export class DayViewSlider extends React.Component{
 
   handleDateClick = (arg) => {
         alert(arg.dateStr)
-      }
+  }
 
   dayHeaderChange = (headerInfo) => {
     const actualDate = headerInfo.date;
@@ -300,6 +327,21 @@ export class DayViewSlider extends React.Component{
       start: startDate.toISOString().split('T')[0],
       end: endDate.toISOString().split('T')[0],
     };
+  }
+
+  eventAllow = (dropInfo, draggedEvent) => {
+    console.log('draggedEvent.extendedProps.editable:',draggedEvent.extendedProps.selectable);
+    // console.log('draggedEvent.extendedProps:',draggedEvent.extendedProps);
+    // console.log('draggedEvent:',draggedEvent);
+    if (!draggedEvent.extendedProps.selectable) {
+      return false;
+    }
+    return true;
+  }
+
+  dateViewToReal = () => {
+
+
   }
 
   render(){
@@ -352,7 +394,7 @@ export class DayViewSlider extends React.Component{
               </div>
               <div style={{
                 display:'flex',
-                width:'60vw',
+                width:'50vw',
                 justifyContent: 'flex-start', 
                 alignItems: 'center',
                 flexDirection: 'row',
@@ -361,6 +403,24 @@ export class DayViewSlider extends React.Component{
                 <div style={{marginLeft:'10vw'}}>
                   <h3>{this.state.meetingNames}</h3>
                 </div>
+              </div>
+              <div style={{
+                display:'flex',
+                width:'10vw',
+                justifyContent: 'flex-start', 
+                alignItems: 'center',
+                flexDirection: 'row',
+                marginTop: '25px'
+                }}>
+                  <Switch 
+                    onChange={this.handleChange} 
+                    // checked={this.state.checked} 
+                    checked={this.state.displayAsBackground}
+                    uncheckedIcon = {false}
+                    checkedIcon = {false}
+                    // offColor = {'#'}
+                    onColor = {'#007bff'}
+                  />
               </div>
             </div> 
             
@@ -415,10 +475,11 @@ export class DayViewSlider extends React.Component{
               visibleRange = {this.setVisibleRange}
               
 
-              initialEvents={this.state.RevEvents} 
-              
+              // initialEvents={this.state.RevEvents} 
+              events={this.state.RevEvents}
+
               longPressDelay={500}
-              nowIndicator={true}
+              nowIndicator={false}
               
               selectable={true}
               selectMirror={true}
@@ -428,6 +489,7 @@ export class DayViewSlider extends React.Component{
               eventContent={this.renderEventContent}
               eventClick={this.handleEventClick}
               eventsSet={this.handleEvents}
+              eventAllow={this.eventAllow}
             />
 
           </div>
