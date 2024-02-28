@@ -4,8 +4,8 @@ import { useLocation } from 'react-router-dom';
 const Info = () => {
   const location = useLocation();
   const { meetingInfo } = location.state || {};
-  const meetingLink = `https://meetmatch.us/table/?vToken=${meetingInfo?.response.tableVisitToken || ''}`;
-  const manageLink = `https://meetmatch.us/manage/?mToken=${meetingInfo?.response.tableManageToken || ''}`; 
+  //const meetingLink = `https://meetmatch.us/table/?vToken=${meetingInfo?.response.tableVisitToken || ''}`;
+  const meetingLink = `https://meetmatch.us/manage/?mToken=${meetingInfo?.response.tableManageToken || ''}`; 
   const [guideVisible, setGuideVisible] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
 
@@ -48,7 +48,8 @@ const Info = () => {
       <button onClick={() => navigator.clipboard.writeText(meetingLink)} className="copy-link-button">
         Copy Meeting Link
       </button>
-      <a href={manageLink} target="_blank" rel="noopener noreferrer" className="manage-table-link">
+      {/* 修改后的按钮以在新标签页中打开ManageTable */}
+      <a href="/manageTable" target="_blank" rel="noopener noreferrer" className="manage-table-link">
         Manage Meeting
       </a>
     </div>

@@ -1,0 +1,161 @@
+/* 基础样式，适用于所有模式 */
+.centeredContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  text-align: center;
+}
+
+.formContainer {
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.calendarWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 20px;
+}
+
+.input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: calc(100% - 20px);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.button, .nextButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0; /* 调整自动外边距为0 */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+  width: auto;
+}
+
+.guideButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  padding: 5px;
+  font-size: 24px;
+  line-height: 30px;
+  text-align: center;
+  border: none;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+  z-index: 1050;
+}
+.calendarWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 20px;
+}
+.guideOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1040;
+}
+
+.guideContent {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 400px;
+  text-align: left;
+  position: relative;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center; /* 中心对齐按钮 */
+  gap: 20px; /* 在按钮之间添加间距 */
+}
+
+/* 日间模式 */
+@media (prefers-color-scheme: light) {
+  .input, .guideButton, .guideContent {
+      border-color: #ccc;
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
+  }
+
+  .button, .nextButton {
+      background-color: #007BFF;
+      color: white;
+  }
+
+  .guideOverlay {
+      background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .rmdp-container,
+  .rmdp-header,
+  .rmdp-day,
+  .rmdp-day-hidden{
+      background-color: #ffffff; /* 亮模式背景 */
+      color: #000; /* 亮模式文字颜色 */
+  }
+}
+
+/* 夜间模式 */
+@media (prefers-color-scheme: dark) {
+  body {
+      background-color: #333;
+      color: #ccc;
+  }
+
+  .input, .guideButton, .guideContent {
+      border-color: #555;
+      background-color: #222;
+      color: #ccc;
+  }
+
+  .button, .nextButton {
+      background-color: #0056b3;
+      color: #ccc;
+  }
+
+  .guideOverlay {
+      background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .rmdp-calendar,
+  .rmdp-header,
+  .rmdp-day,
+  .rmdp-day-hidden {
+      background-color: #222222; 
+      color: #ccc !important; 
+  }
+  .rmdp-header-values {
+      background-color: #222222; 
+      color: #fff !important; 
+  }
+}
