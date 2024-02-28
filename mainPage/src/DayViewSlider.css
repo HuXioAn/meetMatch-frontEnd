@@ -6,7 +6,22 @@
     border-radius: 5px;
     font-size: 20%;
     cursor: pointer;
-    width: 80px; 
+    width: 15vw; 
+    height: 40px;
+    justify-content: 'center';
+    align-items: 'center';
+    text-align: center;
+  }
+
+  .ShowResult {
+    /* display: flex; */
+    /* background-color: lightgray; */
+    /* color: black; */
+    border: none;
+    border-radius: 5px;
+    font-size: 20%;
+    cursor: pointer;
+    width: 15vw; 
     height: 40px;
     justify-content: 'center';
     align-items: 'center';
@@ -17,3 +32,6 @@
     background-color: transparent !important;
   }
   
+  /* .fc-event .fc-event-title, .fc-event .fc-event-time {
+    font-size: 5px; 
+  } */

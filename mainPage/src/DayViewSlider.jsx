@@ -30,7 +30,7 @@ export class DayViewSlider extends React.Component{
     this.state = {
       currentEvents: [],      //本地新创建的事件
       RevEvents: [],          //API收取的事件
-      RealTimeEvents: [],     //时间转换完用于统计结果
+      OverlapTimeSlot: [],     //时间转换完用于统计结果
       meetingNames:'',
       dateSelections:'',      //API收取的时间选择，可能为不连续，来替代前台header的显示
       DateWithoutTime:'',
@@ -39,19 +39,22 @@ export class DayViewSlider extends React.Component{
       isGuideVisible: false,
       guideStep: 0,
       displayAsBackground: false,
+      ShowEvents: [], // 初始时可能与RevEvents相同
+      showingOverlap: false // 初始时显示的是RevEvents
     };
     this.handleChange = this.handleChange.bind(this);
+    this.ShowOverlap = this.ShowOverlap.bind(this);
   }
 
   ///////////////////////////////////switch
 
   handleChange(checked) {
-    const updatedEvents = this.state.RevEvents.map(event => ({
+    const updatedEvents = this.state.ShowEvents.map(event => ({
       ...event,
       display: checked ? 'background' : 'block'
     }));
 
-    this.setState({ RevEvents: updatedEvents, displayAsBackground: checked });
+    this.setState({ ShowEvents: updatedEvents, displayAsBackground: checked });
 
   }
 
@@ -175,7 +178,8 @@ export class DayViewSlider extends React.Component{
         meetingNames: RevmeetingNames,
         DateWithoutTime: WithoutTimes,
         DateNum: dateNum,
-        isLoading: false
+        isLoading: false,
+        ShowEvents: newEvents
        });
 
        
@@ -339,10 +343,239 @@ export class DayViewSlider extends React.Component{
     return true;
   }
 
-  dateViewToReal = () => {
+  //////////////////////////////////////////////////calculate overlap
+  findOverlapBetweenColors = (events) => {
+    // 按颜色分类
+    const eventsByColor = events.reduce((acc, event) => {
+      if (!acc[event.backgroundColor]) {
+        acc[event.backgroundColor] = [];
+      }
+      acc[event.backgroundColor].push(event);
+      return acc;
+    }, {});
+  
+    // 存储每种颜色的时间段整合结果
+    const mergedByColor = {};
+    
+    // 对每种颜色的时间段进行整合
+    Object.keys(eventsByColor).forEach(color => {
+      mergedByColor[color] = this.mergeTimeRanges(eventsByColor[color]);
+    });
+  
+    // 查找不同颜色间的时间段重合情况
+    const overlaps = [];
+    const colors = Object.keys(mergedByColor);
+    let commonOverlaps  = [];
+    let maximumOverlap = { count: 0, timeRanges: [] };
 
+    if(mergedByColor.length==1){
+      return this.state.RevEvents
+    }else{
+      let allTimes = [];
+      colors.forEach(color => {
+        mergedByColor[color].forEach(range => {
+          allTimes.push(new Date(range.start).getTime());
+          allTimes.push(new Date(range.end).getTime());
+        });
+      });
+      allTimes = [...new Set(allTimes)].sort((a, b) => a - b);
+      for (let i = 0; i < allTimes.length - 1; i++) {
+        let startTime = allTimes[i];
+        let endTime = allTimes[i + 1];
+        let count = 0;
+    
+        colors.forEach(color => {
+          mergedByColor[color].forEach(range => {
+            if (new Date(range.start).getTime() <= startTime && new Date(range.end).getTime() >= endTime) {
+              count++;
+            }
+          });
+        });
+    
+        // 如果当前时间段的重叠颜色数超过之前记录的最大值，更新最大值
+        if (count > maximumOverlap.count) {
+          maximumOverlap = { count: count, timeRanges: [{ start: new Date(startTime).toISOString(), end: new Date(endTime).toISOString() }] };
+        } else if (count === maximumOverlap.count) {
+          // 如果当前时间段的重叠颜色数等于之前记录的最大值，添加这个时间段到结果中
+          maximumOverlap.timeRanges.push({ start: new Date(startTime).toISOString(), end: new Date(endTime).toISOString() });
+        }
+      }
+      // let baseRanges = mergedByColor[colors[0]];
+      // for (let i = 1; i < colors.length; i++) {
+      //   let nextColorRanges = mergedByColor[colors[i]];
+      //   let newCommonOverlaps = [];
+    
+      //   // 与下一个颜色分类的时间段比较
+      //   baseRanges.forEach(baseRange => {
+      //     nextColorRanges.forEach(nextRange => {
+      //       const startMax = new Date(Math.max(new Date(baseRange.start), new Date(nextRange.start)));
+      //       const endMin = new Date(Math.min(new Date(baseRange.end), new Date(nextRange.end)));
+            
+      //       // 如果有重叠
+      //       if (startMax < endMin) {
+      //         newCommonOverlaps.push({
+      //           start: startMax.toISOString(),
+      //           end: endMin.toISOString()
+      //         });
+      //       }
+      //     });
+      //   });
+    
+      //   // 更新基础比较范围为当前找到的重叠部分
+      //   baseRanges = newCommonOverlaps;
+      // }
+      // commonOverlaps = baseRanges;
+      // ranges1.forEach(range1 => {
+      //   ranges2.forEach(range2 => {
+      //     const startMax = new Date(Math.max(new Date(range1.start), new Date(range2.start)));
+      //     const endMin = new Date(Math.min(new Date(range1.end), new Date(range2.end)));
+    
+      //     // 如果存在重叠
+      //     if (startMax < endMin) {
+      //       overlapSet.push({start: startMax.toISOString(), end: endMin.toISOString()});
+      //     }
+      //   });
+      // });
+      // // for (let j = i + 1; j < colors.length; j++) {
+      // //   const overlapsBetweenColors = this.findOverlaps(mergedByColor[colors[i]], mergedByColor[colors[j]]);
+      // //   overlaps.push(...overlapsBetweenColors);
+      // // }
+      return maximumOverlap;
+      }
+    
+    }
+      
 
+  
+  mergeTimeRanges = (events) => {
+    // 按开始时间排序
+    events.sort((a, b) => new Date(a.start) - new Date(b.start));
+  
+    const merged = [];
+    let current = null;
+  
+    events.forEach(event => {
+      if (!current) {
+        current = {...event};
+      } else if (new Date(event.start) <= new Date(current.end)) {
+        current.end = new Date(Math.max(new Date(current.end), new Date(event.end))).toISOString();
+      } else {
+        merged.push(current);
+        current = {...event};
+      }
+    });
+  
+    if (current) {
+      merged.push(current);
+    }
+  
+    return merged;
+  };
+  
+  findOverlaps = (ranges1, ranges2) => {
+    const overlaps = [];
+  
+    ranges1.forEach(range1 => {
+      ranges2.forEach(range2 => {
+        const startMax = new Date(Math.max(new Date(range1.start), new Date(range2.start)));
+        const endMin = new Date(Math.min(new Date(range1.end), new Date(range2.end)));
+  
+        // 如果存在重叠
+        if (startMax < endMin) {
+          overlaps.push({start: startMax.toISOString(), end: endMin.toISOString()});
+        }
+      });
+    });
+  
+    return overlaps;
+  };
+
+  ShowOverlap = async (event) => {
+    event.preventDefault();
+    if (this.state.RevEvents.length == 0){
+      alert('No Events Created!');
+    }else{
+      if (this.state.showingOverlap) {
+
+        this.setState({ 
+          ShowEvents: this.state.RevEvents,
+          showingOverlap: false 
+        });
+      } else {
+        const res = this.findOverlapBetweenColors(this.state.RevEvents);
+        console.log('res:', res);
+        // OverlapTime.push({
+      //   id: this.createEventId(),
+      //   title: '', 
+      //   editable: false,
+      //   selectable: false,
+      //   display: 'block',
+      //   start: res.start,
+      //   end: res.end,
+      //   backgroundColor: '#007bff',
+      //   borderColor: '#007bff'
+      // }) 
+      // res.forEach(overlap => {
+      //   OverlapTime.push({
+      //     id: this.createEventId(),
+      //     title: '',
+      //     editable: false,
+      //     selectable: false,
+      //     display: 'block',
+      //     start: overlap.start, // 确保这里overlap有start属性
+      //     end: overlap.end,     // 确保这里overlap有end属性
+      //     backgroundColor: '#007bff',
+      //     borderColor: '#007bff'
+      //   });
+      // });
+      // this.setState({
+      //   OverlapTimeSlot: OverlapTime
+      // }, () => {
+      //   console.log('OverlapTimeSlot:', this.state.OverlapTimeSlot);
+      // });
+      // console.log('OverlapTimeSlot:', this.state.OverlapTimeSlot);
+        
+      // const OverlapTime = res.map(overlap => ({
+      //     id: this.createEventId(),
+      //     title: '',
+      //     editable: false,
+      //     selectable: false,
+      //     display: 'block',
+      //     start: overlap.start,
+      //     end: overlap.end,
+      //     backgroundColor: '#007bff',
+      //     borderColor: '#007bff'
+      //   }));
+        this.setState({ OverlapTimeSlot: [] }, () => {
+          
+          const OverlapTime = [];
+          res.timeRanges.forEach(overlap => {
+            OverlapTime.push({
+              id: this.createEventId(),
+              title: '',
+              editable: false,
+              selectable: false,
+              display: 'block',
+              start: overlap.start,
+              end: overlap.end,
+              backgroundColor: '#007bff',
+              borderColor: '#007bff'
+            });
+          });
+      
+          this.setState({
+            OverlapTimeSlot: OverlapTime,
+            ShowEvents: OverlapTime,
+            showingOverlap: true
+          }, () => {
+            console.log('OverlapTimeSlot:', this.state.OverlapTimeSlot);
+          });
+        });
+      }
+    }
+    
   }
+
 
   render(){
     const { isLoading } = this.state;
@@ -366,7 +599,7 @@ export class DayViewSlider extends React.Component{
             <div style={{
               display:'flex',
               height:'5vh',
-              width:'70vw',
+              width:'60vw',
               justifyContent: 'center',
               flexDirection: 'row',
               alignItems: 'center',
@@ -374,7 +607,7 @@ export class DayViewSlider extends React.Component{
             }}>
               <div style={{
                 display:'flex',
-                width:'10vw',
+                width:'5vw',
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginTop: '25px',
@@ -394,7 +627,7 @@ export class DayViewSlider extends React.Component{
               </div>
               <div style={{
                 display:'flex',
-                width:'50vw',
+                width:'45vw',
                 justifyContent: 'flex-start', 
                 alignItems: 'center',
                 flexDirection: 'row',
@@ -409,9 +642,11 @@ export class DayViewSlider extends React.Component{
                 width:'10vw',
                 justifyContent: 'flex-start', 
                 alignItems: 'center',
-                flexDirection: 'row',
-                marginTop: '25px'
+                flexDirection: 'column',
+                marginTop: '25px',
+                marginRight: '10px'
                 }}>
+                  
                   <Switch 
                     onChange={this.handleChange} 
                     // checked={this.state.checked} 
@@ -426,26 +661,38 @@ export class DayViewSlider extends React.Component{
             
             <div style={{
               display:'flex',
-              width:'30vw',
+              width:'40vw',
               justifyContent: 'center',
-              flexDirection: 'column',
+              flexDirection: 'row',
               alignItems: 'center',
               
             }}>
               <div style={{
-                padding:10,
-                marginTop: '5px'
+                // padding:10,
+                marginTop: '15px',
+                marginRight: '10px'
                 }}>
                 <button className="SubmitButton" onClick={this.SubmitTimeTable}>
                   SUBMIT
                 </button>
               </div>
 
-              {/* <div style={{padding:10}}>
-                <button className="SubmitButton">
-                  SHOW
+              <div style={{
+                // padding:10,
+                marginTop: '15px',
+
+                }}>
+                <button 
+                  className="ShowResult" 
+                  onClick={this.ShowOverlap}
+                  style={{ 
+                    backgroundColor: this.state.showingOverlap ? '#007bff' : 'lightgrey',
+                    color: this.state.showingOverlap ? 'white' : 'black' 
+                  }}
+                >
+                  ANALYSE
                 </button>
-              </div> */}
+              </div>
 
             </div>
           </div>
@@ -476,7 +723,7 @@ export class DayViewSlider extends React.Component{
               
 
               // initialEvents={this.state.RevEvents} 
-              events={this.state.RevEvents}
+              events={this.state.ShowEvents}
 
               longPressDelay={500}
               nowIndicator={false}
