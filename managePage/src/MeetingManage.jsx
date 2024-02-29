@@ -6,7 +6,7 @@ import './MeetingManage.css';
 
 function MeetingManage() {
   const history = useHistory();
-  const location = useLocation();
+  const location = window.location;
 
   const [meetingName, setMeetingName] = useState('');
   const [selectedDates, setSelectedDates] = useState([]);
