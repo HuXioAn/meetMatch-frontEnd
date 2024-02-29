@@ -3,6 +3,7 @@ import { Calendar } from 'react-multi-date-picker';
 import { useHistory, useLocation } from 'react-router-dom';
 import * as api from './api/callapi';
 import './MeetingManage.css';
+import dayjs from 'dayjs';
 
 function MeetingManage() {
   const history = useHistory();
@@ -19,13 +20,13 @@ function MeetingManage() {
     const params = new URLSearchParams(location.search);
     const mTokenFromUrl = params.get('mToken');
     if (mTokenFromUrl) {
-      const vToken = "v" + mTokenFromUrl.substring(1, 17);
       setMToken(mTokenFromUrl);
+      const vToken = "v" + mTokenFromUrl.substring(1, 17);
 
       api.visitTableApi(vToken).then(data => {
         if (data) {
           setMeetingName(data.meetingName || '');
-          setSelectedDates(data.dateSelection ? data.dateSelection.map(date => new Date(date)) : []);
+          setSelectedDates(data.dateSelection ? data.dateSelection.map(dateStr => new Date(dateStr)) : []);
           setMaxCollaborator(data.maxCollaborator || '');
           setEmail(data.email || '');
         }
@@ -37,10 +38,10 @@ function MeetingManage() {
 
   const handleUpdate = async (event) => {
     event.preventDefault();
-    const dateSelection = selectedDates.map(date => 
-        (date instanceof Date ? date : new Date(date)).toISOString().split('T')[0]
-      );
-      
+    const dateSelection = selectedDates.map(date =>
+      dayjs(date).format('YYYY-MM-DD')
+    );
+    
     api.manageTableApi(mToken, meetingName, dateSelection, 0, 24, maxCollaborator, email)
       .then(response => {
         history.push('/info', { meetingInfo: { meetingName, selectedDates: dateSelection, maxCollaborator, email, response } });
@@ -53,7 +54,7 @@ function MeetingManage() {
 
   const handleDeleteConfirm = async () => {
     api.deleteTableApi(mToken)
-      .then(response => {
+      .then(() => {
         window.location.href = 'https://meetmatch.us';
       })
       .catch(error => {
