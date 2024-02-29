@@ -2,47 +2,52 @@ import React, { useEffect, useState } from 'react';
 import { Calendar } from 'react-multi-date-picker';
 import { useHistory } from 'react-router-dom';
 import * as api from './api/callapi';
-import './MeetingCreate.css'; // 你的CSS文件路径
-import "react-multi-date-picker/styles/layouts/mobile.css"; // 基础样式
-// 根据需要导入日间或夜间模式样式
+import './MeetingCreate.css';
+import "react-multi-date-picker/styles/layouts/mobile.css";
 import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 
 function MeetingCreate() {
     const history = useHistory();
-    const [isDarkMode, setIsDarkMode] = useState(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    useEffect(() => {
-        const matcher = window.matchMedia('(prefers-color-scheme: dark)');
-        const onChange = ({ matches }) => setIsDarkMode(matches);
-        matcher.addListener(onChange);
-        return () => matcher.removeListener(onChange);
-    }, []);
     const [meetingName, setMeetingName] = useState('');
     const [selectedDates, setSelectedDates] = useState([]);
     const [maxCollaborator, setMaxCollaborator] = useState('');
     const [email, setEmail] = useState('');
     const [isGuideVisible, setIsGuideVisible] = useState(false);
     const [guideStep, setGuideStep] = useState(0);
+    const [isAlertVisible, setIsAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
-    const guideContent = [
-        "Step 1: Enter the meeting name in the designated field.",
-        "Step 2: Select the dates for your meeting using the calendar.",
-        "Step 3: Enter the maximum number of collaborators.",
-        "Step 4: Provide an email(Optional) for meeting notifications.",
-        "Step 5: Click 'Create Meeting' to finalize the meeting setup."
-    ];
+    useEffect(() => {
+        const matcher = window.matchMedia('(prefers-color-scheme: dark)');
+        const onChange = ({ matches }) => { /* 处理暗模式 */ };
+        matcher.addListener(onChange);
+        return () => matcher.removeListener(onChange);
+    }, []);
 
-    const nextGuideStep = () => {
-        if (guideStep < guideContent.length - 1) {
-            setGuideStep(guideStep + 1);
-        } else {
-            setIsGuideVisible(false);
-            setGuideStep(0);
-        }
+    const showAlert = (message) => {
+        setAlertMessage(message);
+        setIsAlertVisible(true);
     };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        if (!meetingName.trim()) {
+            showAlert("Please fill in the meeting name.");
+            return;
+        }
+
+        if (selectedDates.length === 0) {
+            showAlert("Please select at least one date for the meeting.");
+            return;
+        }
+
+        const maxCollaboratorsInt = parseInt(maxCollaborator, 10);
+        if (!maxCollaborator || isNaN(maxCollaboratorsInt) || maxCollaboratorsInt <= 1) {
+            showAlert("Please enter a right maximum number of collaborators.");
+            return;
+        }
+
         const dateSelection = selectedDates.map(date => date.format('YYYY-MM-DD'));
         
         api.createTableApi(meetingName, dateSelection, 0, 24, maxCollaborator, email)
@@ -51,25 +56,23 @@ function MeetingCreate() {
             })
             .catch(error => {
                 console.error('Error creating meeting:', error);
-                alert('Failed to create meeting.');
+                showAlert('Failed to create meeting.');
             });
     };
 
     return (
       <div className="centeredContainer">
         <div className="formContainer">
-          <button onClick={() => setIsGuideVisible(true)} className="guideButton">?</button>
-          {isGuideVisible && (
+          
+       
+          {isAlertVisible && (
             <div className="guideOverlay">
               <div className="guideContent">
-                <p>{guideContent[guideStep]}</p>
-                <button onClick={nextGuideStep} className="nextButton">
-                  {guideStep < guideContent.length - 1 ? "next" : "Close"}
-                </button>
+                <p>{alertMessage}</p>
+                <button onClick={() => setIsAlertVisible(false)} className="button">OK</button>
               </div>
             </div>
           )}
-
           <h2>Create a New Meeting</h2>
           <div className="calendarWrapper">
             <Calendar multiple value={selectedDates} onChange={setSelectedDates} />

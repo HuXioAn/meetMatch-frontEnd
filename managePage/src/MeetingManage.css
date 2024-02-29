@@ -18,7 +18,7 @@
 
 .calendarWrapper {
   display: flex;
-  justify-content: center;
+  justify-content: center !important;
   width: 100%;
   margin: 0 auto 20px;
 }
@@ -31,6 +31,9 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+}
+.deleteButton {
+  background-color: #dc3545 !important; /* 红色 */
 }
 
 .button, .nextButton {
@@ -98,6 +101,42 @@
   justify-content: center; /* 中心对齐按钮 */
   gap: 20px; /* 在按钮之间添加间距 */
 }
+
+.confirmDialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 400px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.confirmDialogTitle {
+  margin-top: 0;
+  color: rgb(0, 0, 0);
+}
+
+.confirmDialogButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirmDialogButton {
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
 
 /* 日间模式 */
 @media (prefers-color-scheme: light) {

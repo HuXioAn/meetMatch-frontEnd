@@ -1,69 +1,95 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from 'react-multi-date-picker';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import * as api from './api/callapi';
 import './MeetingManage.css';
 
 function MeetingManage() {
-    const history = useHistory();
-    const initialDates = ["2024-03-01", "2024-03-02", "2024-03-04"].map(date => new Date(date));
+  const history = useHistory();
+  const location = useLocation();
 
-    const [meetingName, setMeetingName] = useState('Initial Meeting Name');
-    const [selectedDates, setSelectedDates] = useState(initialDates);
-    const [maxCollaborator, setMaxCollaborator] = useState(10);
-    const [email, setEmail] = useState('example@example.com');
-    const [mToken, setMToken] = useState('fakeMToken123456');
+  const [meetingName, setMeetingName] = useState('');
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [maxCollaborator, setMaxCollaborator] = useState('');
+  const [email, setEmail] = useState('');
+  const [mToken, setMToken] = useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-    const handleUpdate = async (event) => {
-      event.preventDefault();
-      const dateSelection = selectedDates.map(date => date.toISOString().split('T')[0]);
-  
-      api.manageTableApi(mToken, meetingName, dateSelection, 0, 24, maxCollaborator, email)
-          .then(response => {
-                  history.push('/info', { meetingInfo: { meetingName, selectedDates: dateSelection, maxCollaborator, email, response } });
-              } )
-              
-          .catch(error => {
-              console.error('Error updating meeting:', error);
-              alert('Failed to update meeting.');
-          });
-  };
-  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const mTokenFromUrl = params.get('mToken');
+    if (mTokenFromUrl) {
+      const vToken = "v" + mTokenFromUrl.substring(1, 17);
+      setMToken(mTokenFromUrl);
 
-  const handleDelete = async (event) => {
+      api.visitTableApi(vToken).then(data => {
+        if (data) {
+          setMeetingName(data.meetingName || '');
+          setSelectedDates(data.dateSelection ? data.dateSelection.map(date => new Date(date)) : []);
+          setMaxCollaborator(data.maxCollaborator || '');
+          setEmail(data.email || '');
+        }
+      }).catch(error => {
+        console.error('Error fetching meeting data:', error);
+      });
+    }
+  }, [location.search]);
+
+  const handleUpdate = async (event) => {
     event.preventDefault();
+    const dateSelection = selectedDates.map(date => 
+        (date instanceof Date ? date : new Date(date)).toISOString().split('T')[0]
+      );
+      
+    api.manageTableApi(mToken, meetingName, dateSelection, 0, 24, maxCollaborator, email)
+      .then(response => {
+        history.push('/info', { meetingInfo: { meetingName, selectedDates: dateSelection, maxCollaborator, email, response } });
+      })
+      .catch(error => {
+        console.error('Error updating meeting:', error);
+        alert('Failed to update meeting.');
+      });
+  };
 
+  const handleDeleteConfirm = async () => {
     api.deleteTableApi(mToken)
-        .then(response => {
-                alert('Meeting deleted successfully.');
-                history.push('/'); // keyi back to home
-            })
-        
-        .catch(error => {
-            console.error('Error deleting meeting:', error);
-            alert('Failed to delete meeting.');
-        });
-};
+      .then(response => {
+        window.location.href = 'https://meetmatch.us';
+      })
+      .catch(error => {
+        console.error('Error deleting meeting:', error);
+        alert('Failed to delete meeting.');
+      });
+  };
 
-
-    return (
-        <div className="centeredContainer">
-            <div className="formContainer">
-                <h2>Manage Meeting</h2>
-                <div className="calendarWrapper">
-                    <Calendar multiple value={selectedDates} onChange={setSelectedDates} />
-                </div>
-                <input type="text" value={meetingName} onChange={e => setMeetingName(e.target.value)} placeholder="Meeting Name" className="input" />
-                <input type="number" value={maxCollaborator} onChange={e => setMaxCollaborator(e.target.value)} placeholder="Max Collaborators" className="input" />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional)" className="input" />
-                <div className="buttonContainer">
-                    <button onClick={handleUpdate} className="button">Submit</button>
-                    <button onClick={handleDelete} className="button">Delete</button>
-                </div>
-            </div>
+  return (
+    <div className="centeredContainer">
+      <div className="formContainer">
+        <h2>Manage Meeting</h2>
+        <div className="calendarWrapper">
+          <Calendar multiple value={selectedDates} onChange={setSelectedDates} />
         </div>
-    );
+        <input type="text" value={meetingName} onChange={e => setMeetingName(e.target.value)} placeholder="Meeting Name" className="input" />
+        <input type="number" value={maxCollaborator} onChange={e => setMaxCollaborator(e.target.value)} placeholder="Max Collaborators" className="input" />
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional)" className="input" />
+        <div className="buttonContainer">
+          <button onClick={handleUpdate} className="button">Submit</button>
+          <button onClick={() => setShowConfirmDialog(true)} className="button deleteButton">Delete</button>
+        </div>
+        {showConfirmDialog && (
+          <div className="guideOverlay">
+            <div className="guideContent">
+              <p>Are you sure you want to delete this meeting?</p>
+              <div className="buttonContainer">
+                <button onClick={handleDeleteConfirm} className="button deleteButton">Yes</button>
+                <button onClick={() => setShowConfirmDialog(false)} className="button">No</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default MeetingManage;
