@@ -151,15 +151,33 @@ export class DayViewSlider extends React.Component{
       var eventnum = existingSelection.length;
       while (eventnum>0){
         var slotnum = existingSelection[eventnum-1].slots.length;
+        // dateOnly = existingSelection[eventnum-1].slots[slotnum-1].startTime;
+
         while(slotnum>0){
+          let [dateOnlyStart, timeOnlyStart] = existingSelection[eventnum-1].slots[slotnum-1].startTime.split('T');
+          let [dateOnlyEnd, timeOnlyEnd] = existingSelection[eventnum-1].slots[slotnum-1].endTime.split('T');
+  
+          let [existStart, existStartTime] = RevdateSelections[0].split('T');
+  
+          let index = RevdateSelections.findIndex(d => d.startsWith(dateOnlyStart));
+  
+          let startDate = new Date(existStart);
+          let newDate = new Date(startDate.setDate(startDate.getDate() + index));
+          
+          let dateStartString = newDate.toISOString().split('T')[0];
+          let RevAddateStartString = dateStartString+'T'+timeOnlyStart;
+          let RevAddateEndString = dateStartString+'T'+timeOnlyEnd;
+  
           newEvents.push({
             id: this.createEventId(),
             title: ' ', 
             editable: false,
             selectable: false,
             display: 'block',
-            start: existingSelection[eventnum-1].slots[slotnum-1].startTime,
-            end: existingSelection[eventnum-1].slots[slotnum-1].endTime,
+            // start: existingSelection[eventnum-1].slots[slotnum-1].startTime,
+            // end: existingSelection[eventnum-1].slots[slotnum-1].endTime,
+            start: RevAddateStartString,
+            end: RevAddateEndString,
             backgroundColor: existingSelection[eventnum-1].color,
             borderColor: existingSelection[eventnum-1].color
           });
@@ -168,6 +186,7 @@ export class DayViewSlider extends React.Component{
         eventnum--;
       }
       console.log('newevents', newEvents);
+      
 
       // const combinedEvents = backgroundEvents.concat(newEvents);
       // 只显示对应天数后，没有必要再使用背景色显示，只显示提交的事件
@@ -196,6 +215,12 @@ export class DayViewSlider extends React.Component{
     event.preventDefault();
     var eventnum = this.state.currentEvents.length;
     let refcolor = this.state.currentEvents[eventnum-1].backgroundColor;
+    
+    let dataSelection = new Date(this.state.dateSelections[0]);
+
+    const dateList = this.state.DateWithoutTime;
+    const dateNum = this.state.DateNum;
+
     let starttime = [];
     let endtime = [];
     let color = '';
@@ -208,9 +233,20 @@ export class DayViewSlider extends React.Component{
     while (eventnum>0){
       console.log('this.state.currentEvents[eventnum-1].extendedProps.selectable:',this.state.currentEvents[eventnum-1].extendedProps.selectable);
       if(this.state.currentEvents[eventnum-1].extendedProps.selectable == true){
-        console.log('events:',eventnum);
-        starttime.push(this.state.currentEvents[eventnum-1].startStr);
-        endtime.push(this.state.currentEvents[eventnum-1].endStr);
+        const [setDatePartStart, setTimeStart] = this.state.currentEvents[eventnum-1].startStr.split('T');
+        const [setDatePartEnd, setTimeEnd] = this.state.currentEvents[eventnum-1].endStr.split('T');
+        let datestart = new Date(setDatePartStart);
+        let index = Math.floor((datestart - dataSelection) / (1000 * 60 * 60 * 24));
+        if (index >= 0 && index < dateNum) {
+          const submitDate = dateList[index];
+          const submitTimeStart = submitDate+'T'+setTimeStart;
+          const submitTimeEnd = submitDate+'T'+setTimeEnd;
+          // let submitTime = ;
+          console.log('events:',eventnum);
+          starttime.push(submitTimeStart);
+          endtime.push(submitTimeEnd);
+        }
+        
       }
       eventnum--;
     }
@@ -219,6 +255,11 @@ export class DayViewSlider extends React.Component{
       'startTime': starttime,
       'endTime': endtime[index],
     }));
+    console.log("timeslot:",timeslot);
+
+
+
+
 
     // console.log('color:',color);
     // console.log('timeslot:',timeslot);
@@ -255,6 +296,7 @@ export class DayViewSlider extends React.Component{
         };
     calendarApi.addEvent(newEvent);
     console.log(calendarApi);
+    // console.log('startTime', this.state.currentEvents[0].startStr);
   }
 
   handleEvents = (events) => {
@@ -613,7 +655,7 @@ export class DayViewSlider extends React.Component{
                 marginTop: '25px',
                 marginLeft: '10px'
                 }}>
-                <button onClick={() => this.setIsGuideVisible(true)} style={styles.guideButton}>!</button>
+                <button onClick={() => this.setIsGuideVisible(true)} style={styles.guideButton}>?</button>
                   {this.state.isGuideVisible && (
                       <div style={styles.guideOverlay}>
                           <div style={styles.guideContent}>
@@ -779,13 +821,13 @@ const styles = {
     width: '30px', // 设置按钮宽度
     height: '30px', // 设置按钮高度，与宽度相等形成圆形
     padding: '5px', // 内边距
-    fontSize: '18px', // 感叹号的字体大小
+    fontSize: '20px', // 感叹号的字体大小
     lineHeight: '18px', // 用于垂直居中感叹号
     textAlign: 'center', // 文本居中对齐
     border: 'none', // 无边框
-    borderRadius: '50%', // 边框半径50%形成圆形
-    backgroundColor: '#add8e6', // 淡蓝色背景
-    color: 'white', // 白色文本
+    // borderRadius: '50%', // 边框半径50%形成圆形
+    backgroundColor: 'white', // 淡蓝色背景
+    color: 'black', // 白色文本
     cursor: 'pointer', // 鼠标悬停时显示指针
     zIndex: 1050, // 确保按钮在其他元素之上
   },
