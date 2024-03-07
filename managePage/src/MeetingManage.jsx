@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 
 function MeetingManage() {
   const history = useHistory();
-  const location = window.location;
+  const location = useLocation();
 
   const [meetingName, setMeetingName] = useState('');
   const [selectedDates, setSelectedDates] = useState([]);
@@ -24,9 +24,11 @@ function MeetingManage() {
       const vToken = "v" + mTokenFromUrl.substring(1, 17);
 
       api.visitTableApi(vToken).then(data => {
-        if (data) {
+        if (data && data.dateSelection) {
+          const sortedDates = data.dateSelection.map(dateStr => new Date(dateStr))
+                                .sort((a, b) => a - b);
           setMeetingName(data.meetingName || '');
-          setSelectedDates(data.dateSelection ? data.dateSelection.map(dateStr => new Date(dateStr)) : []);
+          setSelectedDates(sortedDates);
           setMaxCollaborator(data.maxCollaborator || '');
           setEmail(data.email || '');
         }
@@ -38,10 +40,8 @@ function MeetingManage() {
 
   const handleUpdate = async (event) => {
     event.preventDefault();
-    const dateSelection = selectedDates.map(date =>
-      dayjs(date).format('YYYY-MM-DD')
-    );
-    
+    const dateSelection = selectedDates.map(date => dayjs(date).format('YYYY-MM-DD'));
+
     api.manageTableApi(mToken, meetingName, dateSelection, 0, 24, maxCollaborator, email)
       .then(response => {
         history.push('/info', { meetingInfo: { meetingName, selectedDates: dateSelection, maxCollaborator, email, response } });
@@ -50,6 +50,11 @@ function MeetingManage() {
         console.error('Error updating meeting:', error);
         alert('Failed to update meeting.');
       });
+  };
+
+  const handleDateChange = (dates) => {
+    const sortedDates = [...dates].sort((a, b) => a - b);
+    setSelectedDates(sortedDates);
   };
 
   const handleDeleteConfirm = async () => {
@@ -68,7 +73,7 @@ function MeetingManage() {
       <div className="formContainer">
         <h2>Manage Meeting</h2>
         <div className="calendarWrapper">
-          <Calendar multiple value={selectedDates} onChange={setSelectedDates} />
+          <Calendar multiple value={[...selectedDates]} onChange={handleDateChange} />
         </div>
         <input type="text" value={meetingName} onChange={e => setMeetingName(e.target.value)} placeholder="Meeting Name" className="input" />
         <input type="number" value={maxCollaborator} onChange={e => setMaxCollaborator(e.target.value)} placeholder="Max Collaborators" className="input" />
